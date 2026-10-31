@@ -1,75 +1,104 @@
-# تشغيل Polytechnic Study Hub للطلاب
+# Polytechnic Study Hub — Student Setup
 
-هذه الطريقة تثبّت الموقع مباشرة من Docker. **لا تحتاج ZIP أو GitHub repository أو VS Code أو Node.js.** تنطبق الخطوات على Mac وWindows.
+**Mac & Windows | No ZIP, coding, or project download needed.**
 
-## أول تشغيل
+You need **Docker Desktop** and the **read-only token** sent privately by the owner.
 
-### 1. جهّز Docker وGitHub
+## First Time (5 Steps)
 
-1. ثبّت Docker Desktop وشغّله.
-2. سيعطيك صاحب الموقع بشكل خاص اسم مستخدم التوزيع ورمز قراءة مخصصاً لتنزيل التطبيق. هذا الحساب مخصص للتوزيع، ولديه صلاحية **Read** على حزمة التطبيق فقط؛ لا يملك صلاحية نشر أو صلاحية على مستودع الكود.
+### 1. Open Docker Desktop
 
-### 2. سجّل الدخول إلى حزمة الموقع
+Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) if you haven't already, then **start it**.
 
-افتح **Terminal** على Mac أو **PowerShell** على Windows، ثم نفّذ:
+- **Mac:** Open **Terminal**.
+- **Windows:** Open **PowerShell**.
 
-```sh
-docker login ghcr.io -u DISTRIBUTION_USERNAME
+Use the same commands on both.
+
+### 2. Log in to download the app
+
+Copy and run this command **exactly as shown**:
+
+```bash
+docker login ghcr.io -u ReoOBH
 ```
 
-عندما يظهر `Password:`, الصق رمز القراءة الذي أرسله لك صاحب الموقع بشكل خاص، ثم اضغط Enter. لن تظهر أحرف الرمز. لا تضع أي رمز حقيقي في هذا الملف أو في الكود. يجب أن تظهر `Login Succeeded`.
+When you see `Password:`, **paste the token sent by the owner** and press **Enter**.
 
-### 3. شغّل Study Hub
+- Use the provided token, **not your GitHub password**.
+- Nothing will appear as you paste. This is normal.
+- You should see **`Login Succeeded`**.
 
-انسخ الأمر التالي كاملاً ونفّذه مرة واحدة في Terminal أو PowerShell:
+**This is only for downloading the app. You will create your own Study Hub account in Step 4.**
 
-```sh
+### 3. Install and start the app
+
+**Copy this entire command** into Terminal / PowerShell and press **Enter**:
+
+```bash
 docker run -d --name studyhub-student --restart unless-stopped -p 127.0.0.1:8081:8080 -v polytechnic-study-hub-student:/data -e NODE_ENV=production -e PORT=8080 -e HOST=0.0.0.0 -e DATABASE_PATH=/data/polytechnic-study-hub.sqlite ghcr.io/reoobh/polytechnic-study-hub:v5.2.2-private-midterm-20261031
 ```
 
-قد يستغرق التنزيل أول مرة بعض الوقت. حسابك وتقدمك يُحفظان في Docker volume باسم `polytechnic-study-hub-student` على جهازك.
+Docker will download and start the app. The first download may take a few minutes. A long ID means the container started.
 
-### 4. أنشئ حسابك الدراسي
+### 4. Create YOUR Study Hub account
 
-نفّذ هذا الأمر مرة واحدة:
+Run this command **once**:
 
-```sh
+```bash
 docker exec -it studyhub-student node scripts/provision-student.mjs
 ```
 
-اختر اسم مستخدم وكلمة مرور. إدخال كلمة المرور مخفي. احفظ **رموز الاسترجاع** التي تظهر لك في مكان آمن وخاص؛ لن تظهر مرة أخرى.
+Follow the questions on screen:
 
-### 5. افتح الموقع
+1. **Username:** Choose your own (3–32 characters). Use lowercase letters, numbers, `.`, `_`, or `-`. Example: `student_01`.
+2. **Password:** Choose 12–128 characters. Include at least **three** of these: lowercase English letters, uppercase English letters, numbers, or symbols. Do not use one character repeated by itself. Your typing is hidden.
+3. **Confirm password:** Enter the same password again.
+4. **Recovery codes:** The app will show **10 codes**. Save them somewhere private. They are shown only once and help you reset a forgotten password.
 
-اذهب إلى [http://localhost:8081](http://localhost:8081) وسجّل الدخول بحسابك الدراسي.
+**Your Study Hub username and password are your own. They are not the GitHub download credentials.**
 
-## في المرات القادمة
+### 5. Open the website
 
-1. شغّل Docker Desktop وافتح [http://localhost:8081](http://localhost:8081).
-2. إذا لم يفتح الموقع، افتح Docker Desktop → **Containers**، وابحث عن `studyhub-student` واضغط ▶ **Start**.
-3. أو شغّله من Terminal على Mac أو PowerShell على Windows:
+Open **http://localhost:8081** and sign in with the Study Hub account you just created.
 
-```sh
-docker start studyhub-student
-```
+You're ready to study!
 
-لا تحتاج إلى تكرار `docker run` أو `docker login` أو إنشاء الحساب. حسابك وتقدمك محفوظان.
+---
 
-## إذا نسيت كلمة المرور
+## Next Time — How to Open the App
 
-شغّل الأمر التالي في Terminal أو PowerShell، ثم أدخل اسم المستخدم ورمز استرجاع غير مستخدم وكلمة مرور جديدة:
+1. Start **Docker Desktop**.
+2. Open **Terminal** (Mac) or **PowerShell** (Windows).
+3. Run:
 
-```sh
+   ```bash
+   docker start studyhub-student
+   ```
+
+4. Open **http://localhost:8081**.
+
+**Or:** In Docker Desktop → **Containers**, find `studyhub-student` and press **Start ▶**.
+
+If the app is already running, just open the website. **Do not repeat the install or account-creation steps.** Your progress is saved.
+
+## Forgot Your Study Hub Password?
+
+With Docker Desktop running, use:
+
+```bash
 docker exec -it studyhub-student node scripts/recover-student-account.mjs
 ```
 
-سيتم إلغاء الجلسات السابقة مع الاحتفاظ بحسابك ودرجاتك ومحاولاتك وتقدمك. احفظ مجموعة رموز الاسترجاع الجديدة. لا ترسل كلمة المرور أو الرموز لصاحب الموقع.
+Enter your Study Hub username, one unused recovery code, and a new password that follows the 12–128 character and three-character-type rules above. Save the new recovery codes.
 
-## مشاكل شائعة
+## Having Trouble?
 
-- إذا ظهر `unauthorized`، تأكد أن صاحب الموقع أرسل لك اسم مستخدم التوزيع ورمز القراءة الصحيحين، ثم أعد `docker login`.
-- إذا كان المنفذ 8081 مستخدماً، أغلق التطبيق الآخر الذي يستخدمه ثم أعد التشغيل.
-- **لا تحذف** Docker volume المسمى `polytechnic-study-hub-student`؛ حذفه يمسح حسابك وتقدمك.
-- سجّل الخروج على الأجهزة المشتركة. مسؤول الجهاز يستطيع الوصول إلى بيانات Docker المحلية؛ تسجيل الدخول لا يمنع ذلك.
+- **`unauthorized` / `denied`:** Check the token the owner sent you, then repeat Step 2.
+- **Container already exists:** The app is already installed. Use `docker start studyhub-student` instead of Step 3.
+- **Website won't open:** Make sure Docker Desktop is running; then start the container.
+- **Port 8081 is in use:** Close the other app using that port, or ask the owner for help.
 
-هذه صورة خاصة للمراجعة الدراسية للمجموعة المصرح لها فقط. لا تشارك الصورة أو الأسئلة أو لقطات الامتحانات مع أشخاص آخرين.
+**Important:** Never delete the Docker volume `polytechnic-study-hub-student` — it stores your account and study progress. Do not share your token, password, recovery codes, or the private study materials.
+
+*Mac setup has been tested. Native Windows testing is still pending.*
