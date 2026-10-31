@@ -84,85 +84,9 @@ If the app is already running, just open the website. **Do not repeat the instal
 
 ## How to Update
 
-**Wait until the owner sends a new immutable image digest.** Keep Docker Desktop open. Updating does not create another account. The backup contains private account and study data, so keep it on your computer.
+If a new version of Polytechnic Study Hub becomes available, the owner will notify you and provide simple instructions on how to get the latest version.
 
-### Mac — Terminal
-
-Replace the digest placeholder with the exact value sent by the owner. Run the first block while the current app is still running:
-
-```bash
-set -e
-IMAGE='ghcr.io/reoobh/polytechnic-study-hub@sha256:PASTE_RELEASE_DIGEST'
-OLD_IMAGE=$(docker inspect --format '{{.Config.Image}}' studyhub-student)
-DATA_VOLUME=$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/data"}}{{.Name}}{{end}}{{end}}' studyhub-student)
-[ -n "$OLD_IMAGE" ] || { echo "Current image not found. Stop and contact the owner."; exit 1; }
-[ -n "$DATA_VOLUME" ] || { echo "Study data volume not found. Stop and contact the owner."; exit 1; }
-echo "Using existing data volume: $DATA_VOLUME"
-STAMP=$(date +%Y%m%d-%H%M%S)
-BACKUP="$HOME/StudyHub-Backups/$STAMP"
-mkdir -m 700 -p "$BACKUP"
-docker exec studyhub-student node scripts/backup-auth-data.mjs "/tmp/studyhub-backup-$STAMP"
-docker cp "studyhub-student:/tmp/studyhub-backup-$STAMP/." "$BACKUP/"
-docker run --rm --mount "type=bind,source=$BACKUP,target=/backup,readonly" "$OLD_IMAGE" node scripts/restore-auth-data.mjs --check /backup
-docker pull "$IMAGE"
-docker buildx imagetools inspect "$IMAGE" # Digest must match the owner’s release notice.
-```
-
-Before continuing, confirm the displayed **Digest** matches the owner’s release notice. Then recreate the container with the same data volume and settings:
-
-```bash
-docker stop studyhub-student
-docker rm studyhub-student
-docker run -d --name studyhub-student --restart unless-stopped -p 127.0.0.1:8081:8080 --mount "type=volume,source=$DATA_VOLUME,target=/data" -e NODE_ENV=production -e PORT=8080 -e HOST=0.0.0.0 -e DATABASE_PATH=/data/polytechnic-study-hub.sqlite "$IMAGE"
-for i in {1..30}; do HEALTH=$(docker inspect --format '{{.State.Health.Status}}' studyhub-student 2>/dev/null); [ "$HEALTH" = healthy ] && break; sleep 2; done
-[ "$HEALTH" = healthy ] || { echo "App did not become healthy. Keep the backup and contact the owner."; exit 1; }
-curl -fsS http://localhost:8081/healthz
-```
-
-### Windows — PowerShell
-
-Replace the digest placeholder with the exact value sent by the owner. Run the first block while the current app is still running:
-
-```powershell
-$Image = 'ghcr.io/reoobh/polytechnic-study-hub@sha256:PASTE_RELEASE_DIGEST'
-$OldImage = docker inspect --format '{{.Config.Image}}' studyhub-student
-$DataVolume = docker inspect --format '{{range .Mounts}}{{if eq .Destination "/data"}}{{.Name}}{{end}}{{end}}' studyhub-student
-if (-not $OldImage) { throw 'Current image not found. Stop and contact the owner.' }
-if (-not $DataVolume) { throw 'Study data volume not found. Stop and contact the owner.' }
-$Stamp = Get-Date -Format yyyyMMdd-HHmmss
-$Backup = Join-Path $HOME "StudyHub-Backups\$Stamp"
-New-Item -ItemType Directory -Path $Backup -Force | Out-Null
-docker exec studyhub-student node scripts/backup-auth-data.mjs "/tmp/studyhub-backup-$Stamp"
-if ($LASTEXITCODE -ne 0) { throw 'Backup failed. Do not update.' }
-docker cp "studyhub-student:/tmp/studyhub-backup-$Stamp/." "$Backup/"
-if ($LASTEXITCODE -ne 0) { throw 'Backup copy failed. Do not update.' }
-docker run --rm --mount "type=bind,source=$Backup,target=/backup,readonly" $OldImage node scripts/restore-auth-data.mjs --check /backup
-if ($LASTEXITCODE -ne 0) { throw 'Backup verification failed. Do not update.' }
-docker pull $Image
-if ($LASTEXITCODE -ne 0) { throw 'Image download failed. The current app is still running.' }
-docker buildx imagetools inspect $Image
-if ($LASTEXITCODE -ne 0) { throw 'Could not verify the image. Do not update.' }
-```
-
-Confirm the displayed **Digest** matches the owner’s release notice. Then recreate the container:
-
-```powershell
-docker stop studyhub-student
-if ($LASTEXITCODE -ne 0) { throw 'Could not stop the app. Do not continue.' }
-docker rm studyhub-student
-if ($LASTEXITCODE -ne 0) { throw 'Could not replace the old container. Keep the data volume.' }
-docker run -d --name studyhub-student --restart unless-stopped -p 127.0.0.1:8081:8080 --mount "type=volume,source=$DataVolume,target=/data" -e NODE_ENV=production -e PORT=8080 -e HOST=0.0.0.0 -e DATABASE_PATH=/data/polytechnic-study-hub.sqlite $Image
-if ($LASTEXITCODE -ne 0) { throw 'Container start failed. Keep the backup and contact the owner.' }
-$Health = ''
-for ($i = 0; $i -lt 30; $i++) { $Health = docker inspect --format '{{.State.Health.Status}}' studyhub-student 2>$null; if ($Health -eq 'healthy') { break }; Start-Sleep -Seconds 2 }
-if ($Health -ne 'healthy') { throw 'App did not become healthy. Keep the backup and contact the owner.' }
-curl.exe -fsS http://localhost:8081/healthz
-if ($LASTEXITCODE -ne 0) { throw 'Health check failed. Keep the backup and contact the owner.' }
-```
-
-Sign in with your existing account and check your saved progress. If health or data checks fail, do not provision another account or delete any volume. Keep the backup and contact the owner for rollback help. The update keeps the existing `/data` volume; do not use `docker volume rm`, `docker volume prune`, or `docker rm -v`.
-
-*The update sequence was tested on macOS with disposable Docker data. Native Windows PowerShell acceptance is still pending.*
+**You don't need to do anything until the owner announces an update.**
 
 ## Forgot Your Study Hub Password?
 
