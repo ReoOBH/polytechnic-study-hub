@@ -181,6 +181,6 @@ Enter your Study Hub username, one unused recovery code, and a new password that
 - **Website won't open:** Make sure Docker Desktop is running; then start the container.
 - **Port 8081 is in use:** Close the other app using that port, or ask the owner for help.
 
-**Important:** Never delete the Docker volume `polytechnic-study-hub-student` — it stores your account and study progress. Do not share your token, password, recovery codes, or the private study materials.
+**Important:** Never delete the Docker volume mounted at `/data` by `studyhub-student` — it stores your account and study progress. New installations normally name it `polytechnic-study-hub-student`. Do not share your token, password, recovery codes, or the private study materials.
 
 *Mac setup has been tested. Native Windows testing is still pending.*
